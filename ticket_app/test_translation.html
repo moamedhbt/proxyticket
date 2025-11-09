@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Translation Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        #result { margin-top: 20px; padding: 10px; border: 1px solid #ddd; }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>Translation Test</h1>
+    <div>
+        <label for="textToTranslate">French Text:</label>
+        <input type="text" id="textToTranslate" value="actionneur pneumatique" style="width: 300px;">
+        <button onclick="testTranslation()">Test Translation</button>
+    </div>
+    <div id="result">Click the button to test translation</div>
+
+    <script>
+    async function testTranslation() {
+        const text = document.getElementById('textToTranslate').value.trim();
+        const resultDiv = document.getElementById('result');
+        
+        if (!text) {
+            resultDiv.innerHTML = '<span class="error">Please enter some text to translate</span>';
+            return;
+        }
+
+        resultDiv.textContent = 'Translating...';
+        
+        try {
+            const API_KEY = 'AIzaSyBppv7cQSxki9fo3OfWczGLwBl4WFcZlcA';
+            const MODEL = 'gemini-2.5-flash';
+            const url = `https://generativelanguage.googleapis.com/v1/models/${MODEL}:generateContent?key=${API_KEY}`;
+            
+            const prompt = `You are a professional translator. 
+Translate the following French text to Modern Standard Arabic. 
+Return ONLY the Arabic translation, nothing else, no explanations, no JSON, just the translated text.
+
+French: "${text}"
+Arabic: `;
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        role: 'user',
+                        parts: [{ text: prompt }]
+                    }],
+                    generationConfig: {
+                        temperature: 0.3,
+                        topP: 0.8,
+                        topK: 40
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                const error = await response.text();
+                throw new Error(`HTTP ${response.status}: ${error}`);
+            }
+
+            const data = await response.json();
+            console.log('Full response:', data);
+            
+            let translatedText = '';
+            if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+                translatedText = data.candidates[0].content.parts[0].text.trim();
+                // Clean up the response
+                translatedText = translatedText.replace(/^['"]|['"]$/g, '').trim();
+            }
+            
+            if (translatedText) {
+                resultDiv.innerHTML = `
+                    <div class="success">
+                        <strong>Original:</strong> ${text}<br>
+                        <strong>Translated:</strong> ${translatedText}
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <strong>Raw Response:</strong>
+                        <pre style="background: #f5f5f5; padding: 10px; overflow: auto;">
+${JSON.stringify(data, null, 2)}
+                        </pre>
+                    </div>
+                `;
+            } else {
+                throw new Error('No translation found in response');
+            }
+            
+        } catch (error) {
+            console.error('Translation error:', error);
+            resultDiv.innerHTML = `
+                <div class="error">
+                    Error: ${error.message}
+                </div>
+                <div style="margin-top: 10px;">
+                    <strong>Full Error:</strong>
+                    <pre style="background: #f5f5f5; padding: 10px; overflow: auto;">
+${error}
+                    </pre>
+                </div>
+            `;
+        }
+    }
+    </script>
+</body>
+</html>

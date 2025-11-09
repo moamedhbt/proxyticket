@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>تذاكر A4 — عربي (وضع وكيل/Proxy اختياري)</title>
+<style>
+  @page { size: A4; margin: 10mm; }
+  @media print { #controls, h1 { display: none !important; } body { margin: 0; } .sheet { page-break-after: always; box-shadow: none; border: none; } }
+  body { font-family: system-ui, "Noto Sans Arabic", "Amiri", Tahoma, Arial, sans-serif; background:#f6f7f9; margin:0; color:#111; }
+  #app { max-width: 1000px; margin: 20px auto 32px; padding: 0 16px; }
+  h1 { font-size: 20px; margin: 16px 0 12px; }
+  #controls { background:#fff; border:1px solid #e5e7eb; border-radius:12px; padding:16px; box-shadow:0 1px 3px rgba(0,0,0,.06); display:grid; gap:14px; }
+  .section { border-top:1px dashed #e5e7eb; padding-top:10px; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .custom-fields { margin-top: 15px; }
+  .custom-fields .grid2 { gap: 10px; }
+  .custom-field-group { background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #e9ecef; }
+  .custom-field-controls { display: flex; gap: 15px; margin-top: 5px; font-size: 12px; }
+  .custom-field-controls label { display: flex; align-items: center; gap: 4px; cursor: pointer; }
+  .custom-field-controls input[type="checkbox"] { margin: 0; width: auto; }
+  .custom-title { border-right: 2px solid #4CAF50; }
+  .custom-value { border-left: 2px solid #4CAF50; }
+  .grid3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+  label { font-size:13px; color:#374151; display:block; margin-bottom:6px; }
+  input[type="text"], input[type="number"], select, input[type="color"], input[type="password"], input[type="url"] { width:100%; padding:10px 12px; border:1px solid #d1d5db; border-radius:10px; font-size:14px; }
+  input[type="checkbox"] { transform: scale(1.1); margin-left:6px; }
+  button { cursor:pointer; border:1px solid #111; background:#111; color:#fff; padding:10px 14px; border-radius:10px; font-size:14px; }
+  button.secondary { background:#fff; color:#111; border-color:#d1d5db; }
+  .btns { display:flex; gap:8px; flex-wrap:wrap; }
+  .hint { font-size:12px; color:#555; }
+  .status { font-size:12px; white-space:pre-wrap; }
+  .ok { color:#0f766e; } .err { color:#b91c1c; } .muted{ color:#6b7280; }
+  .sheet { background:#fff; width:210mm; min-height:297mm; margin:16px auto; box-shadow:0 1px 4px rgba(0,0,0,.08); border:1px solid #e5e7eb; border-radius:8px; padding:8mm; box-sizing:border-box; }
+  .ticket-grid { display:grid; grid-template-columns:1fr 1fr; grid-template-rows:repeat(5,1fr); gap:6mm; height:100%; }
+  .ticket { display:grid; align-content:start; }
+  .ticket-logo { width: 28mm; height: 12mm; object-fit: contain; margin-bottom: 4mm; }
+  .line { white-space: pre-wrap; word-break: break-word; }
+  .sep { height:1px; background:#d1d5db; margin:6px 0; }
+  .ticket-row { display: flex; justify-content: space-between; margin-bottom: 4mm; }
+  .label { font-weight: bold; }
+  .value { font-weight: normal; }
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>مولّد تذاكر A4 — عربي (يدعم Proxy)</h1>
+  <div id="controls">
+    <div class="grid2">
+      <div><label>المرجع</label><input id="reference" type="text" placeholder="مثال: cp101" /></div>
+      <div><label>الوصف (Désignation)</label><input id="designation" type="text" placeholder="مثال: actionneur pneumatique" /></div>
+    </div>
+    <div class="grid2">
+      <div><label>بلد المنشأ</label><input type="text" id="origin" placeholder="مثال: فرنسا" /></div>
+      <div><label>بلد الاستيراد</label><input type="text" id="import" placeholder="مثال: المغرب" /></div>
+    </div>
+    
+    <div class="custom-fields">
+      <div class="grid2">
+        <div class="custom-field-group">
+          <label>حقل مخصص 1</label>
+          <div class="grid2">
+            <input type="text" id="custom1Title" placeholder="عنوان الحقل" class="custom-title" />
+            <input type="text" id="custom1Value" placeholder="قيمة الحقل" class="custom-value" />
+          </div>
+          <div class="custom-field-controls">
+            <label><input type="checkbox" id="showCustom1" checked /> إظهار في التذكرة</label>
+            <label><input type="checkbox" id="translateCustom1" checked /> ترجمة العنوان</label>
+          </div>
+        </div>
+        <div class="custom-field-group">
+          <label>حقل مخصص 2</label>
+          <div class="grid2">
+            <input type="text" id="custom2Title" placeholder="عنوان الحقل" class="custom-title" />
+            <input type="text" id="custom2Value" placeholder="قيمة الحقل" class="custom-value" />
+          </div>
+          <div class="custom-field-controls">
+            <label><input type="checkbox" id="showCustom2" checked /> إظهار في التذكرة</label>
+            <label><input type="checkbox" id="translateCustom2" checked /> ترجمة العنوان</label>
+          </div>
+        </div>
+        <div class="custom-field-group">
+          <label>حقل مخصص 3</label>
+          <div class="grid2">
+            <input type="text" id="custom3Title" placeholder="عنوان الحقل" class="custom-title" />
+            <input type="text" id="custom3Value" placeholder="قيمة الحقل" class="custom-value" />
+          </div>
+          <div class="custom-field-controls">
+            <label><input type="checkbox" id="showCustom3" checked /> إظهار في التذكرة</label>
+            <label><input type="checkbox" id="translateCustom3" checked /> ترجمة العنوان</label>
+          </div>
+        </div>
+        <div class="custom-field-group">
+          <label>حقل مخصص 4</label>
+          <div class="grid2">
+            <input type="text" id="custom4Title" placeholder="عنوان الحقل" class="custom-title" />
+            <input type="text" id="custom4Value" placeholder="قيمة الحقل" class="custom-value" />
+          </div>
+          <div class="custom-field-controls">
+            <label><input type="checkbox" id="showCustom4" checked /> إظهار في التذكرة</label>
+            <label><input type="checkbox" id="translateCustom4" checked /> ترجمة العنوان</label>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="grid3">
+        <div><label>عدد التذاكر</label><input id="count" type="number" min="1" value="10" /></div>
+        <div><label>حجم الخط (نقطة)</label><input id="fontSize" type="number" min="8" value="13" /></div>
+        <div><label>تباعد الأسطر</label><input id="lineHeight" type="number" step="0.1" min="1" value="1.5" /></div>
+      </div>
+      <div class="grid3">
+        <div><label>محاذاة</label><select id="align"><option value="start">يمين</option><option value="center">وسط</option><option value="end">يسار</option></select></div>
+        <div><label>وزن الخط</label><select id="fontWeight"><option value="400">عادي</option><option value="600">سميك</option><option value="700">غليظ</option></select></div>
+        <div><label>حشوة البطاقة (mm)</label><input id="padding" type="number" min="2" value="6" /></div>
+      </div>
+      <div class="grid3">
+        <div><label>نمط الحدود</label><select id="borderStyle"><option value="dashed">متقطّع</option><option value="solid">صلب</option><option value="none">بدون</option></select></div>
+        <div><label>سماكة الحدود (px)</label><input id="borderWidth" type="number" min="0" value="1.2" /></div>
+        <div><label>لون الحدود</label><input id="borderColor" type="color" value="#9ca3af" /></div>
+      </div>
+      <div class="grid3">
+        <div><label>استدارة الزوايا (px)</label><input id="radius" type="number" min="0" value="8" /></div>
+        <div><label>فاصل داخلي</label><select id="showSeparator"><option value="yes">إظهار</option><option value="no">إخفاء</option></select></div>
+        <div><label>نص الملصقات</label><select id="labelsMode"><option value="ar">عربي</option><option value="fr">فرنسي</option><option value="both">عربي + فرنسي</option></select></div>
+      </div>
+
+      <div class="grid2">
+        <div>
+          <label><input type="checkbox" id="autoTranslate" checked /> تفعيل الترجمة</label>
+          <div class="grid2" style="margin-top:8px;">
+            <div><label>وضع المترجم</label><select id="translatorMode"><option value="local">محلي</option><option value="api" selected>API مباشر</option></select></div>
+            <div><label>API Key (مطلوب)</label><input id="apiKey" type="password" value="AIzaSyBppv7cQSxki9fo3OfWczGLwBl4WFcZlcA" placeholder="أدخل مفتاح Gemini API" /></div>
+          </div>
+          <div class="grid2" style="margin-top:8px;">
+            <div><label>نموذج الترجمة</label><input id="apiModel" type="text" value="gemini-2.5-flash" placeholder="مثال: gemini-2.5-flash" /></div>
+            <div><label>درجة الحرارة (0-1)</label><input id="temperature" type="number" min="0" max="1" step="0.1" value="0.3" /></div>
+          </div>
+          <div class="status" id="status"></div>
+        </div>
+        <div><label>شعار اختياري</label><input id="logoInput" type="file" accept="image/*" /></div>
+      </div>
+    </div>
+
+    <div class="btns">
+      <button id="generate">توليد التذاكر</button>
+      <button class="secondary" id="printBtn">طباعة / حفظ PDF</button>
+      <button class="secondary" id="downloadHtml">تنزيل الملف (HTML)</button>
+    </div>
+  </div>
+
+  <div id="pages"></div>
+</div>
+
+<script>
+const DICT_COUNTRIES = {"espagne":"إسبانيا","italie":"إيطاليا","france":"فرنسا","allemagne":"ألمانيا","maroc":"المغرب","algerie":"الجزائر","algérie":"الجزائر","tunisie":"تونس","turquie":"تركيا","chine":"الصين","pays-bas":"هولندا","pays bas":"هولندا","belgique":"بلجيكا","royaume-uni":"المملكة المتحدة","royaume uni":"المملكة المتحدة","etats-unis":"الولايات المتحدة","etats unis":"الولايات المتحدة","états-unis":"الولايات المتحدة","états unis":"الولايات المتحدة","portugal":"البرتغال","grece":"اليونان","grèce":"اليونان","suisse":"سويسرا","autriche":"النمسا","pologne":"بولندا"};
+const DICT_PARTS = {"actionneur":"مشغل","actionneur pneumatique":"مشغل هوائي","soupape":"صمام","capteur":"مستشعر","capteur de pression":"مستشعر ضغط","pompe":"مضخة","moteur":"محرك","roulement":"رولمان بلي","joint":"جوان","filtre":"فلتر","vanne":"صمام","verin":"أسطوانة","vérin":"أسطوانة","ressort":"ياي","courroie":"سير","boitier":"علبة","boîtier":"علبة"};
+function norm(s){ return String(s||"").trim().toLowerCase(); }
+function localTranslatePart(s){ const k = norm(s); return DICT_PARTS[k] || s; }
+function localTranslateCountry(s){ const k = norm(s); return DICT_COUNTRIES[k] || s; }
+
+async function translateViaProxy(list, proxyUrl){
+  const res = await fetch(proxyUrl, { method:"POST", headers:{ "Content-Type": "application/json" }, body: JSON.stringify({ list }) });
+  if(!res.ok) throw new Error("Proxy HTTP " + res.status);
+  const data = await res.json();
+  // Accept either {data:[...]} or a raw array
+  if (Array.isArray(data)) return data;
+  if (Array.isArray(data.data)) return data.data;
+  throw new Error("Proxy returned unexpected format");
+}
+
+function buildBody(list, strictJson){
+  const clean = list.map(s => String(s||""));
+  const prompt = strictJson
+    ? `Translate these French terms to Modern Standard Arabic.\nReturn ONLY a JSON array of strings, same order.\n${JSON.stringify(clean)}`
+    : `Translate to Arabic only (no explanations): ${clean.join(" | ")}`;
+  return {
+    contents: [{ role: "user", parts: [{ text: prompt }]}],
+    generationConfig: strictJson ? { temperature: 0, response_mime_type: "application/json" } : { temperature: 0 }
+  };
+}
+
+async function callOnce(model, key, body, base) {
+  // This function is kept for compatibility but not used in direct API mode
+  return { ok: false, status: 0, url: '', raw: '', json: null };
+}
+async function translateViaApi(list, model, key, statusEl) {
+  if (!key) {
+    statusEl.textContent = 'الرجاء إدخال مفتاح API';
+    statusEl.className = 'status err';
+    return null;
+  }
+  
+  const url = `https://generativelanguage.googleapis.com/v1/models/${model}:generateContent?key=${key}`;
+  
+  // Create a very specific prompt for translation
+  const prompt = `You are a professional translator. 
+  Translate the following French text to Modern Standard Arabic. 
+  Return ONLY the Arabic translation, nothing else, no explanations, no JSON, just the translated text.
+  
+  French: "${list[0]}"
+  Arabic: `;
+
+  const body = {
+    contents: [{
+      role: 'user',
+      parts: [{
+        text: prompt
+      }]
+    }],
+    generationConfig: {
+      temperature: 0.3,
+      topP: 0.8,
+      topK: 40
+    }
+  };
+  
+  try {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`HTTP ${response.status}: ${error}`);
+    }
+    
+    const data = await response.json();
+    console.log('API Response:', data);
+    
+    // Extract the response text
+    let translatedText = '';
+    
+    // Try to get the text from the response
+    if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
+      // Get the text and clean it up
+      translatedText = data.candidates[0].content.parts[0].text
+        .replace(/^['"]|['"]$/g, '')  // Remove surrounding quotes if any
+        .trim();
+      
+      console.log('Raw API response:', data);
+      console.log('Extracted translation:', translatedText);
+      
+      // If the response still looks like JSON or has unwanted formatting
+      if (translatedText.startsWith('{') || translatedText.includes('"text":')) {
+        try {
+          const json = JSON.parse(translatedText);
+          translatedText = json.text || translatedText;
+        } catch (e) {
+          // If parsing fails, try to extract just the Arabic text
+          const arabicMatch = translatedText.match(/[\u0600-\u06FF\s]+/g);
+          if (arabicMatch) {
+            translatedText = arabicMatch.join(' ').trim();
+          }
+        }
+      }
+    }
+    
+    if (!translatedText) {
+      console.error('No translation found in response:', data);
+      throw new Error('No translation found in response');
+    }
+    
+    // Return the translated text in an array to match the expected format
+    return [translatedText];
+    
+  } catch (e) {
+    console.error('Translation error:', e);
+    statusEl.textContent = `API Error: ${e.message}. Falling back to local translation.`;
+    statusEl.className = 'status err';
+    return null;
+  }
+}
+
+let logoDataUrl = "";
+document.getElementById('logoInput').addEventListener('change', (e)=>{
+  const f = e.target.files && e.target.files[0];
+  if(!f){ logoDataUrl = ""; return; }
+  const fr = new FileReader();
+  fr.onload = ()=> { logoDataUrl = fr.result; };
+  fr.readAsDataURL(f);
+});
+
+const LABELS = {
+  ar: { ref:"المرجع", des:"الوصف", org:"بلد المنشأ", imp:"بلد الاستيراد" },
+  fr: { ref:"Référence", des:"Désignation", org:"Pays d'origine", imp:"Pays d'importation" },
+  both: { ref:"المرجع / Référence", des:"الوصف / Désignation", org:"بلد المنشأ / Pays d'origine", imp:"بلد الاستيراد / Pays d'importation" }
+};
+
+function ticketStyle(o){
+  const pad = Math.max(2, Number(o.padding) || 6);
+  const radius = Math.max(0, Number(o.radius) || 8);
+  const bWidth = Math.max(0, Number(o.borderWidth) || 1);
+  const bStyle = o.borderStyle || "dashed";
+  const bColor = o.borderColor || "#9ca3af";
+  const align = o.align || "start";
+  const fw = o.fontWeight || "400";
+  const lh = Math.max(1, Number(o.lineHeight) || 1.5);
+  const fz = Math.max(8, Number(o.fontSize) || 13);
+  return `font-size:${fz}pt;line-height:${lh};font-weight:${fw};text-align:${align};border:${bWidth}px ${bStyle} ${bColor};border-radius:${radius}px;padding:${pad}mm;`;
+}
+
+function makeTicketHTML(vals, o){
+  const labels = LABELS[o.labelsMode] || LABELS.ar;
+  const sep = o.showSeparator === "yes" ? `<div class="sep"></div>` : ``;
+  const logo = logoDataUrl ? `<img class="ticket-logo" src="${logoDataUrl}" alt="logo" />` : ``;
+  
+  // Ensure all values are properly converted to strings and trimmed
+  const ref = String(vals.ref || '').trim() || '-';
+  const des = String(vals.des || '').trim() || '-';
+  const org = String(vals.org || '').trim() || '-';
+  const imp = String(vals.imp || '').trim() || '-';
+  
+  let customFieldsHTML = '';
+  
+  // Debug: Log the custom fields data
+  console.log('Custom fields data:', {
+    custom1: vals.custom1,
+    custom2: vals.custom2,
+    custom3: vals.custom3,
+    custom4: vals.custom4
+  });
+
+  // Process each custom field
+  [vals.custom1, vals.custom2, vals.custom3, vals.custom4].forEach((field) => {
+    if (field && (field.title || field.title === '') && (field.value || field.value === '')) {
+      // If either title or value exists, show the field
+      if (field.title || field.value) {
+        customFieldsHTML += `
+          <div class="ticket-row">
+            <span class="label">${field.title || ''}</span>
+            <span class="value">${field.value || ''}</span>
+          </div>`;
+      }
+    }
+  });
+  
+  const html = `<div class="ticket" style="${ticketStyle(o)}">${logo}
+    <div class="line">${labels.ref}: ${ref}</div>
+    <div class="line">${labels.des}: ${des}</div>
+    <div class="line">${labels.org}: ${org}</div>
+    <div class="line">${labels.imp}: ${imp}</div>${sep}
+    ${customFieldsHTML}
+  </div>`;
+  
+  return html;
+}
+
+function formatArabicDate(date) {
+  const options = { 
+    year: 'numeric', 
+    month: '2-digit', 
+    day: '2-digit',
+    numberingSystem: 'arab'
+  };
+  return date.toLocaleDateString('ar-EG', options);
+}
+
+function chunk(a, n){ const out=[]; for(let i=0;i<a.length;i+=n) out.push(a.slice(i,i+n)); return out; }
+
+function collectOptions(){
+  return {
+    fontSize: parseInt(document.getElementById('fontSize').value, 10) || 13,
+    lineHeight: parseFloat(document.getElementById('lineHeight').value) || 1.5,
+    align: document.getElementById('align').value,
+    fontWeight: document.getElementById('fontWeight').value,
+    padding: parseInt(document.getElementById('padding').value, 10) || 6,
+    borderStyle: document.getElementById('borderStyle').value,
+    borderWidth: parseFloat(document.getElementById('borderWidth').value) || 1.2,
+    borderColor: document.getElementById('borderColor').value,
+    radius: parseInt(document.getElementById('radius').value, 10) || 8,
+    showSeparator: document.getElementById('showSeparator').value === 'yes',
+    labelsMode: document.getElementById('labelsMode').value,
+    autoTranslate: document.getElementById('autoTranslate').checked,
+    translatorMode: document.getElementById('translatorMode').value,
+    apiKey: document.getElementById('apiKey').value.trim(),
+    apiModel: document.getElementById('apiModel').value.trim(),
+    temperature: parseFloat(document.getElementById('temperature').value) || 0.3
+  };
+}
+
+function buildStandaloneDocument(){
+  const styles = `<style>@page{size:A4;margin:10mm}@media print{.sheet{page-break-after:always}body{margin:0}}body{font-family:system-ui,"Noto Sans Arabic","Amiri",Tahoma,Arial,sans-serif}.sheet{background:#fff;width:210mm;min-height:297mm;padding:8mm;box-sizing:border-box}.ticket-grid{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:repeat(5,1fr);gap:6mm;height:100%}.ticket{display:grid;align-content:start}.ticket-logo{width:28mm;height:12mm;object-fit:contain;margin-bottom:4mm}.line{white-space:pre-wrap;word-break:break-word}.sep{height:1px;background:#d1d5db;margin:6px 0}</style>`;
+  const pagesHTML = document.getElementById('pages').innerHTML || '';
+  return `<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>تذاكر</title>${styles}</head><body>${pagesHTML}</body></html>`;
+}
+
+document.getElementById('generate').addEventListener('click', async () => {
+  const status = document.getElementById('status'); 
+  status.textContent = "";
+  status.className = 'status';
+  
+  // Get custom field settings
+  const customFields = [];
+  for (let i = 1; i <= 4; i++) {
+    const title = document.getElementById(`custom${i}Title`).value.trim();
+    const value = document.getElementById(`custom${i}Value`).value.trim();
+    const show = document.getElementById(`showCustom${i}`).checked;
+    const translate = document.getElementById(`translateCustom${i}`).checked;
+    
+    if (title || value) {
+      customFields.push({
+        title: title || `Custom ${i}`,
+        value: value,
+        show: show,
+        translate: translate
+      });
+    } else {
+      customFields.push({
+        title: `Custom ${i}`,
+        value: '',
+        show: false,
+        translate: false
+      });
+    }
+  }
+  
+  const customFieldSettings = {
+    custom1: customFields[0] || { title: '', value: '', show: false, translate: false },
+    custom2: customFields[1] || { title: '', value: '', show: false, translate: false },
+    custom3: customFields[2] || { title: '', value: '', show: false, translate: false },
+    custom4: customFields[3] || { title: '', value: '', show: false, translate: false }
+  };
+
+  const raw = {
+    reference: document.getElementById('reference').value.trim(),
+    designation: document.getElementById('designation').value.trim(),
+    origin: document.getElementById('origin').value.trim(),
+    import: document.getElementById('import').value.trim(),
+    custom1: customFieldSettings.custom1,
+    custom2: customFieldSettings.custom2,
+    custom3: customFieldSettings.custom3,
+    custom4: customFieldSettings.custom4
+  };
+  
+  if (!raw.designation) {
+    status.textContent = 'الرجاء إدخال وصف';
+    status.className = 'status err';
+    return;
+  }
+  
+  const count = Math.max(1, parseInt(document.getElementById('count').value, 10) || 1);
+  const o = collectOptions();
+
+  let des = raw.designation, org = raw.origin, imp = raw.import;
+
+  if (o.autoTranslate) {
+    try {
+      if (o.translatorMode === "api" && o.apiKey) {
+        status.textContent = "جارٍ الترجمة...";
+        status.className = 'status';
+        
+        console.log('Original values:', { des, org, imp });
+        
+        // Create an array of fields that need translation
+        const fields = [
+          { name: 'des', value: des },
+          { name: 'org', value: org },
+          { name: 'imp', value: imp }
+        ];
+        
+        // Only translate fields that have values
+        const translationPromises = fields
+          .filter(field => field.value)
+          .map(field => 
+            translateViaApi([field.value], o.apiModel, o.apiKey, status)
+              .then(translation => ({
+                name: field.name,
+                value: translation ? translation[0] : field.value
+              }))
+              .catch(e => {
+                console.error(`Error translating ${field.name}:`, e);
+                return { name: field.name, value: field.value };
+              })
+          );
+        
+        // Wait for all translations to complete
+        const results = await Promise.all(translationPromises);
+        
+        // Update the variables with translated values
+        results.forEach(result => {
+          if (result) {
+            switch (result.name) {
+              case 'des': des = result.value || des; break;
+              case 'org': org = result.value || org; break;
+              case 'imp': imp = result.value || imp; break;
+            }
+          }
+        });
+        
+        console.log('Final values after translation:', { des, org, imp });
+        
+        status.textContent = "تمت الترجمة بنجاح";
+        status.className = 'status ok';
+      } else {
+        des = localTranslatePart(des); org = localTranslateCountry(org); imp = localTranslateCountry(imp);
+        status.innerHTML = '<span class="ok">تمت الترجمة محلياً.</span>';
+      }
+    } catch (e) {
+      status.innerHTML = '<span class="err">تعذّرت الترجمة (' + e.message + ').</span> <span class="muted">تم استخدام القاموس المحلي مؤقتاً.</span>';
+      des = localTranslatePart(des); org = localTranslateCountry(org); imp = localTranslateCountry(imp);
+    }
+  }
+
+  // Translate custom field titles if needed
+  const customFieldsForTranslation = [
+    { ...raw.custom1, title: raw.custom1.title },
+    { ...raw.custom2, title: raw.custom2.title },
+    { ...raw.custom3, title: raw.custom3.title },
+    { ...raw.custom4, title: raw.custom4.title }
+  ];
+  
+  if (o.autoTranslate && o.translatorMode === "api" && o.apiKey) {
+    try {
+      // Only translate fields that have translation enabled
+      const fieldsToTranslate = customFieldsForTranslation.filter(f => f.translate && f.title);
+      
+      if (fieldsToTranslate.length > 0) {
+        const translationPromises = fieldsToTranslate.map(field => 
+          translateViaApi([field.title], o.apiModel, o.apiKey, status)
+        );
+        
+        const translations = await Promise.all(translationPromises);
+        
+        // Update the titles with translations
+        fieldsToTranslate.forEach((field, index) => {
+          if (translations[index] && translations[index][0]) {
+            field.title = translations[index][0];
+          }
+        });
+      }
+    } catch (e) {
+      console.error('Error translating custom field titles:', e);
+    }
+  }
+  
+  // Extract the translated titles
+  const [custom1Title, custom2Title, custom3Title, custom4Title] = customFieldsForTranslation.map(f => f.title);
+
+  // Create an array of ticket objects with the translated values
+  const tickets = Array.from({length: count}, () => ({
+    ref: raw.reference || "-",
+    des: des || "-",
+    org: org || "-",
+    imp: imp || "-",
+    custom1: {
+      title: custom1Title,
+      value: raw.custom1.value,
+      show: raw.custom1.show,
+      translate: raw.custom1.translate
+    },
+    custom2: {
+      title: custom2Title,
+      value: raw.custom2.value,
+      show: raw.custom2.show,
+      translate: raw.custom2.translate
+    },
+    custom3: {
+      title: custom3Title,
+      value: raw.custom3.value,
+      show: raw.custom3.show,
+      translate: raw.custom3.translate
+    },
+    custom4: {
+      title: custom4Title,
+      value: raw.custom4.value,
+      show: raw.custom4.show,
+      translate: raw.custom4.translate
+    }
+  }));
+
+  // Clear previous tickets
+  const pages = document.getElementById('pages'); 
+  pages.innerHTML = '';
+  
+  // Group tickets into pages of 10
+  const groups = chunk(tickets, 10);
+  
+  // Create and append ticket groups to the page
+  groups.forEach(group => {
+    const sheet = document.createElement('div'); 
+    sheet.className = 'sheet';
+    
+    const grid = document.createElement('div'); 
+    grid.className = 'ticket-grid';
+    
+    // Add each ticket to the grid
+    group.forEach(vals => {
+      const ticketHTML = makeTicketHTML(vals, o);
+      grid.insertAdjacentHTML('beforeend', ticketHTML);
+    });
+    
+    // Add empty placeholders if needed
+    for(let i = group.length; i < 10; i++) { 
+      grid.insertAdjacentHTML('beforeend', `
+        <div class="ticket" style="opacity:.25; border:1px dashed #ddd; border-radius:8px;">
+          <div class="line">${LABELS.ar.ref}: -</div>
+          <div class="line">${LABELS.ar.des}: -</div>
+          <div class="line">${LABELS.ar.org}: -</div>
+          <div class="line">${LABELS.ar.imp}: -</div>
+        </div>`
+      );
+    }
+    
+    sheet.appendChild(grid); 
+    pages.appendChild(sheet);
+  });
+});
+
+document.getElementById('printBtn').addEventListener('click', () => window.print());
+
+document.getElementById('downloadHtml').addEventListener('click', () => {
+  const html = buildStandaloneDocument();
+  const blob = new Blob([html], {type: "text/html;charset=utf-8"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = "tickets_a4_ar_proxy_ready.html"; document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+});
+</script>
+</body>
+</html>
