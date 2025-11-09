@@ -1,0 +1,9 @@
+{
+  "name": "ticket-generator",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "cp tickets_arabic_proxy_ready.html index.html"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

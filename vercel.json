@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "tickets_arabic_proxy_ready.html",
+      "use": "@vercel/static"
+    }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/(.*)", "dest": "/tickets_arabic_proxy_ready.html" }
+  ]
+}
